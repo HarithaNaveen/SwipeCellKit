@@ -495,10 +495,19 @@ extension SwipeTableViewCell {
         }
         
         if gestureRecognizer == panGestureRecognizer,
-            let view = gestureRecognizer.view,
-            let gestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer
-        {
-            let translation = gestureRecognizer.translation(in: view)
+            let view = gestureRecognizer.view {
+            
+            // If there are no actions for a row, we should ignore the swipe
+            let velocity = panGestureRecognizer.velocity(in: view)
+            let orientation: SwipeActionsOrientation = velocity.x > 0 ? .left : .right
+            guard let tableView = tableView, let indexPath = tableView.indexPath(for: self),
+                let actions = delegate?.tableView(tableView, editActionsForRowAt: indexPath, for: orientation),
+                actions.count > 0
+                else {
+                    return false
+            }
+            
+            let translation = panGestureRecognizer.translation(in: view)
             return abs(translation.y) <= abs(translation.x)
         }
 
